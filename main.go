@@ -2,25 +2,31 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"strings"
+	"pokedex/internal/pokecache"
+	"time"
 )
 
 func main() {
+
 	scanner := bufio.NewScanner(os.Stdin)
 	fmt.Print("Pokedex > ")
-	cfg := &Config{}
+	cfg := &Config{
+		cache: pokecache.NewCache(5 * time.Minute),
+	}
 	for {
 		if scanner.Scan() {
 			input := scanner.Text()
 			inputclean := cleanInput(input)
 			input = inputclean[0]
+			param := ""
+			if len(inputclean) > 1 {
+				param = inputclean[1]
+			}
 			if command, ok := commands[input]; ok {
-				command.callback(commands, cfg)
+				command.callback(commands, cfg, param)
 			} else {
 				fmt.Println("Uknown command")
 			}
@@ -34,69 +40,7 @@ func main() {
 	}
 }
 
-func commandExit(commands map[string]cliCommand, cfg *Config) error {
-	fmt.Println("Closing the Pokedex... Goodbye!")
-	os.Exit(0)
-	return nil
-}
-
-func commandHelp(commands map[string]cliCommand, cfg *Config) error {
-	fmt.Println("Welcome to the Pokedex!")
-	fmt.Println("Usage:")
-	for c := range commands {
-		fmt.Printf("%v: %v\n", commands[c].name, commands[c].description)
-	}
-	return nil
-}
-
-func commandMap(commands map[string]cliCommand, cfg *Config) error {
-	url := "https://pokeapi.co/api/v2/location-area"
-	if cfg.Next != nil {
-		url = *cfg.Next
-	}
-	res, err := http.Get(url)
-	if err != nil {
-		fmt.Printf("Error requesting locations: %v", err)
-		return err
-	}
-	defer res.Body.Close()
-
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		fmt.Printf("Error reading location data: %v", err)
-		return err
-	}
-	err = json.Unmarshal(data, &cfg)
-	if err != nil {
-		fmt.Printf("Error unmarshalling json location data: %v", err)
-		return err
-	}
-	for _, location := range cfg.Results {
-		fmt.Println(location.Name)
-	}
-	return nil
-}
-
-func commandMapb(commands map[string]cliCommand, cfg *Config) error {
-	if cfg.Previous != nil {
-		cfg.Next = cfg.Previous
-		err := commandMap(commands, cfg)
-		if err != nil {
-			return err
-		}
-	} else {
-		fmt.Println("Already on first page")
-	}
-	return nil
-}
-
-type cliCommand struct {
-	name        string
-	description string
-	callback    func(map[string]cliCommand, *Config) error
-}
-
-var commands = map[string]cliCommand{
+var commands = map[string]CliCommand{
 	"exit": {
 		name:        "exit",
 		description: "Exit the Pokedex",
@@ -110,25 +54,48 @@ var commands = map[string]cliCommand{
 	"map": {
 		name:        "map",
 		description: "Lists the next 20 locations",
-		callback:    commandMap,
+		callback:    CommandMap,
 	},
 	"mapb": {
 		name:        "mapb",
 		description: "list the previous 20 locations",
-		callback:    commandMapb,
+		callback:    CommandMapb,
+	},
+	"explore": {
+		name:        "explore <location>",
+		description: "list the encounters for a location",
+		callback:    CommandExplore,
+	},
+	"catch": {
+		name:        "catch <Pokemon>",
+		description: "attempt to catch a Pokemon",
+		callback:    CommandCatch,
+	},
+	"inspect": {
+		name:        "inspect <Pokemon>",
+		description: "see the details of a caught Pokemon",
+		callback:    CommandInspect,
+	},
+	"dex": {
+		name:        "dex",
+		description: "see the pokemon in your pokedex",
+		callback:    CommandPokedex,
 	},
 }
 
-type LocationInfo struct {
-	Name string `json:"name"`
-	Url  string `json:"url"`
+func commandExit(commands map[string]CliCommand, cfg *Config, param string) error {
+	fmt.Println("Closing the Pokedex... Goodbye!")
+	os.Exit(0)
+	return nil
 }
 
-type Config struct {
-	Count    int            `json:"count"`
-	Next     *string        `json:"next"`
-	Previous *string        `json:"previous"`
-	Results  []LocationInfo `json:"results"`
+func commandHelp(commands map[string]CliCommand, cfg *Config, param string) error {
+	fmt.Println("Welcome to the Pokedex!")
+	fmt.Println("Usage:")
+	for c := range commands {
+		fmt.Printf("%v: %v\n", commands[c].name, commands[c].description)
+	}
+	return nil
 }
 
 func cleanInput(text string) []string {
