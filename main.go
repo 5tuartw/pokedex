@@ -4,8 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 	"pokedex/internal/pokecache"
+	"strings"
 	"time"
 )
 

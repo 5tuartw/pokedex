@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
 	"time"
-	"math/rand"
 )
 
 func CommandCatch(commands map[string]CliCommand, cfg *Config, name string) error {
-	url := "https://pokeapi.co/api/v2/pokemon/"+name+"/"
+	url := "https://pokeapi.co/api/v2/pokemon/" + name + "/"
 	var pokemon Pokemon
 	res, err := http.Get(url)
 	if err != nil {
@@ -33,17 +33,17 @@ func CommandCatch(commands map[string]CliCommand, cfg *Config, name string) erro
 	}
 	//fmt.Printf("Caught %v with base experience %v\n", pokemonData.Name, pokemonData.Experience)
 	fmt.Printf("Throwing a Pokeball at %v...\n", name)
-    // Calculate the initial chance to catch the Pokémon
-    baseExperience := float64(pokemon.Experience)
-    maxBaseExperience := 1000.0
-    initialChance := 1.0 - (baseExperience / maxBaseExperience) - 0.5
-    // Ensure the initial chance is within a reasonable range
-    if initialChance < 0.1 {
-        initialChance = 0.1
-    }
-    //fmt.Printf("Initial chance of catching: %.2f%%\n", initialChance*100)
-    // Player has 3 attempts to catch the Pokémon
-    for attempt := 1; attempt <= 3; attempt++ {
+	// Calculate the initial chance to catch the Pokémon
+	baseExperience := float64(pokemon.Experience)
+	maxBaseExperience := 1000.0
+	initialChance := 1.0 - (baseExperience / maxBaseExperience) - 0.5
+	// Ensure the initial chance is within a reasonable range
+	if initialChance < 0.1 {
+		initialChance = 0.1
+	}
+	//fmt.Printf("Initial chance of catching: %.2f%%\n", initialChance*100)
+	// Player has 3 attempts to catch the Pokémon
+	for attempt := 1; attempt <= 3; attempt++ {
 		fmt.Printf("Attempt %d: Throwing ball", attempt)
 		time.Sleep(500 * time.Millisecond)
 		fmt.Print(".")
@@ -51,22 +51,22 @@ func CommandCatch(commands map[string]CliCommand, cfg *Config, name string) erro
 		fmt.Print(".")
 		time.Sleep(500 * time.Millisecond)
 		fmt.Printf(".\n")
-        roll := rand.Float64()
+		roll := rand.Float64()
 
-        if roll < initialChance {
-            fmt.Printf("Caught %v on attempt %d!\n", name, attempt)
+		if roll < initialChance {
+			fmt.Printf("Caught %v on attempt %d!\n", name, attempt)
 			cfg.CaughtPokemon = append(cfg.CaughtPokemon, pokemon)
-            return nil
-        }
-        // Increase the chance slightly for the next attempt
-        initialChance += 0.1
-        if initialChance > 1.0 {
-            initialChance = 1.0
-        }
+			return nil
+		}
+		// Increase the chance slightly for the next attempt
+		initialChance += 0.1
+		if initialChance > 1.0 {
+			initialChance = 1.0
+		}
 		fmt.Println("Missed!")
-    }
+	}
 
-    //fmt.Printf("Failed to catch %v after 3 attempts.\n", name)
+	//fmt.Printf("Failed to catch %v after 3 attempts.\n", name)
 	return nil
 }
 
@@ -100,7 +100,7 @@ func CommandPokedex(commands map[string]CliCommand, cfg *Config, name string) er
 	fmt.Println("Your Pokedex:")
 	for _, pokemon := range cfg.CaughtPokemon {
 		fmt.Printf(" - \033[34m%v\033[0m\n", strings.Title(pokemon.Name))
-	}	
+	}
 
 	return nil
 }

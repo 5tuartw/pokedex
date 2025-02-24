@@ -3,6 +3,7 @@ package main
 import (
 	"pokedex/internal/pokecache"
 )
+
 type CliCommand struct {
 	name        string
 	description string
@@ -15,12 +16,12 @@ type LocationInfo struct {
 }
 
 type Config struct {
-	cache 			*pokecache.Cache
-	Count		    int
-	Next		    *string
-	Previous		*string
-	Results  		[]LocationInfo
-	CaughtPokemon	[]Pokemon
+	cache         *pokecache.Cache
+	Count         int
+	Next          *string
+	Previous      *string
+	Results       []LocationInfo
+	CaughtPokemon []Pokemon
 }
 
 type LocationAreaResponse struct {
@@ -36,7 +37,7 @@ type LocalPokemon struct {
 }
 
 type PokemonEncounter struct {
-	LocalPokemon    LocalPokemon `json:"pokemon"`
+	LocalPokemon LocalPokemon `json:"pokemon"`
 }
 
 type LocationData struct {
@@ -44,12 +45,12 @@ type LocationData struct {
 }
 
 type Pokemon struct {
-	Name 		string			`json:"name"`
-	Experience	int				`json:"base_experience"`
-	Height		int				`json:"height"`
-	Weight		int				`json:"weight"`
-	Stats		[]PokemonStat	`json:"stats"`
-	Types		[]PokemonType	`json:"types"`
+	Name       string        `json:"name"`
+	Experience int           `json:"base_experience"`
+	Height     int           `json:"height"`
+	Weight     int           `json:"weight"`
+	Stats      []PokemonStat `json:"stats"`
+	Types      []PokemonType `json:"types"`
 }
 
 type PokemonStat struct {
